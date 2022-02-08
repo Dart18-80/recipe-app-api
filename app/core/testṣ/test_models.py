@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
@@ -12,8 +14,8 @@ def sample_user(email='test@londonappdev.com', password='testpass'):
 class ModelTests(TestCase):
 
     def test_create_user_with_email_successful(self):
-        """Comprobar que el email este bien ingresado"""
-        email = 'test@gmail.com'
+        """Test creating a new user with an email is successful"""
+        email = 'test@londonappdev.com'
         password = 'Testpass123'
         user = get_user_model().objects.create_user(
             email=email,
@@ -24,23 +26,24 @@ class ModelTests(TestCase):
         self.assertTrue(user.check_password(password))
 
     def test_new_user_email_normalized(self):
-        """Normalizar un numero usuario"""
-        email = 'test@GMAIL.COM'
+        """Test the email for a new user is normalized"""
+        email = 'test@LONDONAPPDEV.COM'
         user = get_user_model().objects.create_user(email, 'test123')
 
         self.assertEqual(user.email, email.lower())
 
     def test_new_user_invalid_email(self):
-        """Verificar si cuenta con un error en el email"""
+        """Test creating user with no email raises error"""
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user(None, 'test123')
 
     def test_create_new_superuser(self):
-        """Prueba de creacion de superusuario"""
+        """Test creating a new superuser"""
         user = get_user_model().objects.create_superuser(
-            'test@gmail.com',
+            'test@londonappdev.com',
             'test123'
         )
+
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
@@ -54,6 +57,7 @@ class ModelTests(TestCase):
         self.assertEqual(str(tag), tag.name)
 
     def test_ingredient_str(self):
+        """Test the ingredient string respresentation"""
         ingredient = models.Ingredient.objects.create(
             user=sample_user(),
             name='Cucumber'
@@ -71,3 +75,13 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(recipe), recipe.title)
+
+    @patch('uuid.uuid4')
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.recipe_image_file_path(None, 'myimage.jpg')
+
+        exp_path = f'uploads/recipe/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)

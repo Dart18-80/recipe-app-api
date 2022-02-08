@@ -3,8 +3,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
+
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer de los usuarios objetos"""
+    """Serializer for the users object"""
 
     class Meta:
         model = get_user_model()
@@ -12,11 +13,11 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
     def create(self, validated_data):
-        """Crear un usuario con contra encriptada"""
+        """Create a new user with encrypted password and return it"""
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
-        """Modificar al usuario con una contra corecta"""
+        """Update a user, setting the password correctly and return it"""
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
 
@@ -47,7 +48,7 @@ class AuthTokenSerializer(serializers.Serializer):
         )
         if not user:
             msg = _('Unable to authenticate with provided credentials')
-            raise serializers.ValidationError(msg, code='authorization')
+            raise serializers.ValidationError(msg, code='authentication')
 
         attrs['user'] = user
         return attrs
